@@ -24,7 +24,6 @@ from typing import List, Dict, Any
 from pathlib import Path
 from dotenv import load_dotenv
 from langsmith import Client
-from langchain import hub
 from langchain_core.prompts import ChatPromptTemplate
 from utils import check_env_vars, format_score, print_section_header, get_llm as get_configured_llm
 from metrics import evaluate_f1_score, evaluate_clarity, evaluate_precision
@@ -105,9 +104,11 @@ def create_evaluation_dataset(client: Client, dataset_name: str, jsonl_path: str
 def pull_prompt_from_langsmith(prompt_name: str) -> ChatPromptTemplate:
     try:
         print(f"   Puxando prompt do LangSmith Hub: {prompt_name}")
-        prompt = hub.pull(prompt_name)
-        print(f"   ✓ Prompt carregado com sucesso")
-        return prompt
+
+        client = Client()
+        # puxa do Hub e converte para objeto de prompt do LangChain
+        prompt_template = client.pull_prompt(prompt_name)
+        return prompt_template
 
     except Exception as e:
         error_msg = str(e).lower()
@@ -310,8 +311,11 @@ def main():
     print("Certifique-se de ter feito push dos prompts antes de avaliar:")
     print("  python src/push_prompts.py\n")
 
+    #leonanluppi/bug_to_user_story_v1
+    #"bug_to_user_story_v2"
     prompts_to_evaluate = [
         "bug_to_user_story_v2",
+       ##"leonanluppi/bug_to_user_story_v1",
     ]
 
     all_passed = True
